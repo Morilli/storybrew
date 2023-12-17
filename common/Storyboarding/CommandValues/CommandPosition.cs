@@ -1,5 +1,6 @@
 using OpenTK;
 using System;
+using System.Globalization;
 
 namespace StorybrewCommon.Storyboarding.CommandValues
 {
@@ -39,7 +40,7 @@ namespace StorybrewCommon.Storyboarding.CommandValues
 
         public string ToOsbString(ExportSettings exportSettings)
             => exportSettings.UseFloatForMove ?
-                $"{X.ToOsbString(exportSettings)},{Y.ToOsbString(exportSettings)}" :
+                $"{((double)X).ToString("0.#", NumberFormatInfo.InvariantInfo)},{((double)Y).ToString("0.#", NumberFormatInfo.InvariantInfo)}" :
                 $"{(int)Math.Round(X)},{(int)Math.Round(Y)}";
 
         public override string ToString() => ToOsbString(ExportSettings.Default);

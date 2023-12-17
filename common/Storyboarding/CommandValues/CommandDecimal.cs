@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace StorybrewCommon.Storyboarding.CommandValues
@@ -36,7 +37,7 @@ namespace StorybrewCommon.Storyboarding.CommandValues
             => (float)Math.Abs(value - ((CommandDecimal)obj).value);
 
         public string ToOsbString(ExportSettings exportSettings)
-            => ((float)value).ToString(exportSettings.NumberFormat);
+            => value.ToString("0.###", NumberFormatInfo.InvariantInfo);
 
         public static CommandDecimal operator -(CommandDecimal left, CommandDecimal right)
             => new CommandDecimal(left.value - right.value);
