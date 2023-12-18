@@ -363,203 +363,144 @@ namespace StorybrewCommon.Storyboarding
             return AlmostEqual(a.X, b.X, maxAbs.X, maxRelDiff) && AlmostEqual(a.Y, b.Y, maxAbs.Y, maxRelDiff);
         }
 
-        private IEnumerable<MoveCommand> OptimizedMoveCommands()
+        private IEnumerable<T> OptimizedPositionCommands<T>() where T : Command<CommandPosition>
         {
-            var moveCommands = commands.OfType<MoveCommand>().OrderBy(move => move.StartTime).ToArray();
-            if (moveCommands.Length == 0) return Array.Empty<MoveCommand>();
+            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
+            if (tCommands.Length == 0) return Array.Empty<T>();
 
-            List<MoveCommand> newMoveCommands = [moveCommands[0]];
+            List<T> newTCommands = [tCommands[0]];
 
-            for (int i = 1; i < moveCommands.Length; i++)
+            for (int i = 1; i < tCommands.Length; i++)
             {
-                var previousMoveCommand = newMoveCommands[newMoveCommands.Count - 1];
-                var currentMoveCommand = moveCommands[i];
-                if (previousMoveCommand.Easing == OsbEasing.None && currentMoveCommand.Easing == OsbEasing.None
-                    && (int)previousMoveCommand.EndTime == (int)currentMoveCommand.StartTime
-                    && previousMoveCommand.EndValue == currentMoveCommand.StartValue)
+                T previousTCommand = newTCommands[newTCommands.Count - 1];
+                T currentTCommand = tCommands[i];
+                if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
+                    && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
+                    && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
-                    var normalizedPreviousMove = (previousMoveCommand.EndValue - previousMoveCommand.StartValue) / previousMoveCommand.Duration;
-                    var normalizedCurrentMove = (currentMoveCommand.EndValue - currentMoveCommand.StartValue) / currentMoveCommand.Duration;
+                    CommandPosition normalizedPreviousDiff = (previousTCommand.EndValue - previousTCommand.StartValue) / previousTCommand.Duration;
+                    CommandPosition normalizedCurrentDiff = (currentTCommand.EndValue - currentTCommand.StartValue) / currentTCommand.Duration;
 
-                    if (AlmostEqual(normalizedCurrentMove, normalizedPreviousMove, currentMoveCommand.EndValue))
+                    if (AlmostEqual(normalizedCurrentDiff, normalizedPreviousDiff, currentTCommand.EndValue))
                     {
-                        var mergedMove = new MoveCommand(OsbEasing.None, previousMoveCommand.StartTime, currentMoveCommand.EndTime,
-                            previousMoveCommand.StartValue, currentMoveCommand.EndValue);
-                        newMoveCommands[newMoveCommands.Count - 1] = mergedMove;
+                        newTCommands[newTCommands.Count - 1].EndTime = currentTCommand.EndTime;
+                        newTCommands[newTCommands.Count - 1].EndValue = currentTCommand.EndValue;
                     }
                     else
                     {
-                        newMoveCommands.Add(currentMoveCommand);
+                        newTCommands.Add(currentTCommand);
                     }
+                }
+                else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
+                {
+                    newTCommands[newTCommands.Count - 1] = currentTCommand;
                 }
                 else
                 {
-                    newMoveCommands.Add(currentMoveCommand);
+                    newTCommands.Add(currentTCommand);
                 }
             }
 
-            return newMoveCommands;
+            return newTCommands;
         }
 
-        private IEnumerable<ScaleCommand> OptimizedScaleCommands()
+        private IEnumerable<T> OptimizedScaleCommands<T>() where T : Command<CommandScale>
         {
-            var scaleCommands = commands.OfType<ScaleCommand>().OrderBy(scale => scale.StartTime).ToArray();
-            if (scaleCommands.Length == 0) return Array.Empty<ScaleCommand>();
+            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
+            if (tCommands.Length == 0) return Array.Empty<T>();
 
-            List<ScaleCommand> newScaleCommands = [scaleCommands[0]];
+            List<T> newTCommands = [tCommands[0]];
 
-            for (int i = 1; i < scaleCommands.Length; i++)
+            for (int i = 1; i < tCommands.Length; i++)
             {
-                var previousScaleCommand = newScaleCommands[newScaleCommands.Count - 1];
-                var currentScaleCommand = scaleCommands[i];
-                if (previousScaleCommand.Easing == OsbEasing.None && currentScaleCommand.Easing == OsbEasing.None
-                    && (int)previousScaleCommand.EndTime == (int)currentScaleCommand.StartTime
-                    && previousScaleCommand.EndValue == currentScaleCommand.StartValue)
+                T previousTCommand = newTCommands[newTCommands.Count - 1];
+                T currentTCommand = tCommands[i];
+                if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
+                                                              && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
+                                                              && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
-                    var normalizedPreviousScale = (previousScaleCommand.EndValue - previousScaleCommand.StartValue) / previousScaleCommand.Duration;
-                    var normalizedCurrentScale = (currentScaleCommand.EndValue - currentScaleCommand.StartValue) / currentScaleCommand.Duration;
+                    CommandScale normalizedPreviousDiff = (previousTCommand.EndValue - previousTCommand.StartValue) / previousTCommand.Duration;
+                    CommandScale normalizedCurrentDiff = (currentTCommand.EndValue - currentTCommand.StartValue) / currentTCommand.Duration;
 
-                    if (AlmostEqual(normalizedCurrentScale, normalizedPreviousScale, currentScaleCommand.EndValue))
+                    if (AlmostEqual(normalizedCurrentDiff, normalizedPreviousDiff, currentTCommand.EndValue))
                     {
-                        var mergedScale = new ScaleCommand(OsbEasing.None, previousScaleCommand.StartTime, currentScaleCommand.EndTime,
-                            previousScaleCommand.StartValue, currentScaleCommand.EndValue);
-                        newScaleCommands[newScaleCommands.Count - 1] = mergedScale;
+                        newTCommands[newTCommands.Count - 1].EndTime = currentTCommand.EndTime;
+                        newTCommands[newTCommands.Count - 1].EndValue = currentTCommand.EndValue;
                     }
                     else
                     {
-                        newScaleCommands.Add(currentScaleCommand);
+                        newTCommands.Add(currentTCommand);
                     }
+                }
+                else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
+                {
+                    newTCommands[newTCommands.Count - 1] = currentTCommand;
                 }
                 else
                 {
-                    newScaleCommands.Add(currentScaleCommand);
+                    newTCommands.Add(currentTCommand);
                 }
             }
 
-            return newScaleCommands;
+            return newTCommands;
         }
 
-        private IEnumerable<VScaleCommand> OptimizedVectorScaleCommands()
+        private IEnumerable<T> OptimizedCommands<T>() where T : Command<CommandDecimal>
         {
-            var vectorScaleCommands = commands.OfType<VScaleCommand>().OrderBy(vectorScale => vectorScale.StartTime).ToArray();
-            if (vectorScaleCommands.Length == 0) return Array.Empty<VScaleCommand>();
+            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
+            if (tCommands.Length == 0) return Array.Empty<T>();
 
-            List<VScaleCommand> newVectorScaleCommands = [vectorScaleCommands[0]];
+            List<T> newTCommands = [tCommands[0]];
 
-            for (int i = 1; i < vectorScaleCommands.Length; i++)
+            for (int i = 1; i < tCommands.Length; i++)
             {
-                var previousVectorScaleCommand = newVectorScaleCommands[newVectorScaleCommands.Count - 1];
-                var currentVectorScaleCommand = vectorScaleCommands[i];
-                if (previousVectorScaleCommand.Easing == OsbEasing.None && currentVectorScaleCommand.Easing == OsbEasing.None
-                    && (int)previousVectorScaleCommand.EndTime == (int)currentVectorScaleCommand.StartTime
-                    && previousVectorScaleCommand.EndValue == currentVectorScaleCommand.StartValue)
+                T previousTCommand = newTCommands[newTCommands.Count - 1];
+                T currentTCommand = tCommands[i];
+                if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
+                    && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
+                    && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
-                    var normalizedPreviousVectorScale = (previousVectorScaleCommand.EndValue - previousVectorScaleCommand.StartValue) / previousVectorScaleCommand.Duration;
-                    var normalizedCurrentVectorScale = (currentVectorScaleCommand.EndValue - currentVectorScaleCommand.StartValue) / currentVectorScaleCommand.Duration;
+                    double normalizedPreviousDiff = (previousTCommand.EndValue - previousTCommand.StartValue) / previousTCommand.Duration;
+                    double normalizedCurrentDiff = (currentTCommand.EndValue - currentTCommand.StartValue) / currentTCommand.Duration;
 
-                    if (AlmostEqual(normalizedCurrentVectorScale, normalizedPreviousVectorScale, currentVectorScaleCommand.EndValue))
+                    if (AlmostEqual(normalizedCurrentDiff, normalizedPreviousDiff, currentTCommand.EndValue))
                     {
-                        var mergedVectorScale = new VScaleCommand(OsbEasing.None, previousVectorScaleCommand.StartTime, currentVectorScaleCommand.EndTime,
-                            previousVectorScaleCommand.StartValue, currentVectorScaleCommand.EndValue);
-                        newVectorScaleCommands[newVectorScaleCommands.Count - 1] = mergedVectorScale;
+                        newTCommands[newTCommands.Count - 1].EndTime = currentTCommand.EndTime;
+                        newTCommands[newTCommands.Count - 1].EndValue = currentTCommand.EndValue;
                     }
                     else
                     {
-                        newVectorScaleCommands.Add(currentVectorScaleCommand);
+                        newTCommands.Add(currentTCommand);
                     }
+                }
+                else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
+                {
+                    newTCommands[newTCommands.Count - 1] = currentTCommand;
                 }
                 else
                 {
-                    newVectorScaleCommands.Add(currentVectorScaleCommand);
+                    newTCommands.Add(currentTCommand);
                 }
             }
 
-            return newVectorScaleCommands;
-        }
-
-        private IEnumerable<FadeCommand> OptimizedFadeCommands()
-        {
-            var fadeCommands = commands.OfType<FadeCommand>().OrderBy(fade => fade.StartTime).ToArray();
-            if (fadeCommands.Length == 0) return Array.Empty<FadeCommand>();
-
-            List<FadeCommand> newFadeCommands = [fadeCommands[0]];
-
-            for (int i = 1; i < fadeCommands.Length; i++)
+            if (newTCommands.Count == 1 && newTCommands[0].StartValue == newTCommands[0].EndValue)
             {
-                var previousFadeCommand = newFadeCommands[newFadeCommands.Count - 1];
-                var currentFadeCommand = fadeCommands[i];
-                if (previousFadeCommand.Easing == OsbEasing.None && currentFadeCommand.Easing == OsbEasing.None
-                    && (int)previousFadeCommand.EndTime == (int)currentFadeCommand.StartTime
-                    && previousFadeCommand.EndValue == currentFadeCommand.StartValue)
-                {
-                    var normalizedPreviousFade = (previousFadeCommand.EndValue - previousFadeCommand.StartValue) / previousFadeCommand.Duration;
-                    var normalizedCurrentFade = (currentFadeCommand.EndValue - currentFadeCommand.StartValue) / currentFadeCommand.Duration;
-
-                    if (AlmostEqual(normalizedCurrentFade, normalizedPreviousFade, currentFadeCommand.EndValue))
-                    {
-                        var mergedFade = new FadeCommand(OsbEasing.None, previousFadeCommand.StartTime, currentFadeCommand.EndTime,
-                            previousFadeCommand.StartValue, currentFadeCommand.EndValue);
-                        newFadeCommands[newFadeCommands.Count - 1] = mergedFade;
-                    }
-                    else
-                    {
-                        newFadeCommands.Add(currentFadeCommand);
-                    }
-                }
-                else
-                {
-                    newFadeCommands.Add(currentFadeCommand);
-                }
+                if (newTCommands[0] is FadeCommand fade && fade.StartValue == 1
+                    || newTCommands[0] is RotateCommand rotate && rotate.StartValue == 0
+                    || newTCommands[0] is ScaleCommand scale && scale.StartValue == 1)
+                    return Array.Empty<T>();
             }
 
-            return newFadeCommands;
-        }
-
-        private IEnumerable<RotateCommand> OptimizedRotateCommands()
-        {
-            var rotateCommands = commands.OfType<RotateCommand>().OrderBy(rotate => rotate.StartTime).ToArray();
-            if (rotateCommands.Length == 0) return Array.Empty<RotateCommand>();
-
-            List<RotateCommand> newRotateCommands = [rotateCommands[0]];
-
-            for (int i = 1; i < rotateCommands.Length; i++)
-            {
-                var previousRotateCommand = newRotateCommands[newRotateCommands.Count - 1];
-                var currentRotateCommand = rotateCommands[i];
-                if (previousRotateCommand.Easing == OsbEasing.None && currentRotateCommand.Easing == OsbEasing.None
-                                                                 && (int)previousRotateCommand.EndTime == (int)currentRotateCommand.StartTime
-                                                                 && previousRotateCommand.EndValue == currentRotateCommand.StartValue)
-                {
-                    var normalizedPreviousRotate = (previousRotateCommand.EndValue - previousRotateCommand.StartValue) / previousRotateCommand.Duration;
-                    var normalizedCurrentRotate = (currentRotateCommand.EndValue - currentRotateCommand.StartValue) / currentRotateCommand.Duration;
-
-                    if (AlmostEqual(normalizedCurrentRotate, normalizedPreviousRotate, currentRotateCommand.EndValue))
-                    {
-                        var mergedRotate = new RotateCommand(OsbEasing.None, previousRotateCommand.StartTime, currentRotateCommand.EndTime,
-                            previousRotateCommand.StartValue, currentRotateCommand.EndValue);
-                        newRotateCommands[newRotateCommands.Count - 1] = mergedRotate;
-                    }
-                    else
-                    {
-                        newRotateCommands.Add(currentRotateCommand);
-                    }
-                }
-                else
-                {
-                    newRotateCommands.Add(currentRotateCommand);
-                }
-            }
-
-            return newRotateCommands;
+            return newTCommands;
         }
 
         private void OptimizeCommands()
         {
-            var optimizedMoveCommands = OptimizedMoveCommands();
-            var optimizedScaleCommands = OptimizedScaleCommands();
-            var optimizedVectorScaleCommands = OptimizedVectorScaleCommands();
-            var optimizedFadeCommands = OptimizedFadeCommands();
-            var optimizedRotateCommands = OptimizedRotateCommands();
+            var optimizedMoveCommands = OptimizedPositionCommands<MoveCommand>();
+            var optimizedScaleCommands = OptimizedCommands<ScaleCommand>();
+            var optimizedVectorScaleCommands = OptimizedScaleCommands<VScaleCommand>();
+            var optimizedFadeCommands = OptimizedCommands<FadeCommand>();
+            var optimizedRotateCommands = OptimizedCommands<RotateCommand>();
 
             commands.RemoveAll(command => command is MoveCommand or ScaleCommand or VScaleCommand or FadeCommand or RotateCommand);
             commands.AddRange(optimizedMoveCommands);
