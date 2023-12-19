@@ -483,12 +483,13 @@ namespace StorybrewCommon.Storyboarding
                 }
             }
 
-            if (newTCommands.Count == 1 && newTCommands[0].StartValue == newTCommands[0].EndValue)
+            T lastComand = newTCommands[newTCommands.Count - 1];
+            if (lastComand.StartValue == lastComand.EndValue)
             {
-                if (newTCommands[0] is FadeCommand fade && fade.StartValue == 1
-                    || newTCommands[0] is RotateCommand rotate && rotate.StartValue == 0
-                    || newTCommands[0] is ScaleCommand scale && scale.StartValue == 1)
-                    return Array.Empty<T>();
+                if (lastComand is FadeCommand fade && fade.StartValue == 1
+                    || lastComand is RotateCommand rotate && rotate.StartValue == 0
+                    || lastComand is ScaleCommand scale && scale.StartValue == 1)
+                    newTCommands.RemoveAt(newTCommands.Count - 1);
             }
 
             return newTCommands;
