@@ -272,8 +272,11 @@ namespace StorybrewCommon.Animations
                 var middle = new Vector2((float)middleKeyframe.Time, getComponent(middleKeyframe.Value));
                 var end = new Vector2((float)endKeyframe.Time, getComponent(endKeyframe.Value));
 
-                var area = Math.Abs(.5 * (start.X * end.Y + end.X * middle.Y + middle.X * start.Y - end.X * start.Y - middle.X * end.Y - start.X * middle.Y));
-                var bottom = Math.Sqrt(Math.Pow(start.X - end.X, 2) + Math.Pow(start.Y - end.Y, 2));
+                double startEnd = (double)start.X * end.Y - (double)end.X * start.Y;
+                double startMiddle = (double)middle.X * start.Y - (double)start.X * middle.Y;
+                double middleEnd = (double)end.X * middle.Y - (double)middle.X * end.Y;
+                double area = Math.Abs(startEnd + startMiddle + middleEnd) * 0.5;
+                var bottom = Vector2.Distance(start, end);
                 return area / bottom * 2;
             });
 
