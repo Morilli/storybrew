@@ -378,6 +378,14 @@ namespace StorybrewCommon.Storyboarding
                     && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
                     && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
+                    if (currentTCommand.Duration == 0)
+                    {
+                        if (currentTCommand.EndValue != currentTCommand.StartValue)
+                            newTCommands.Add(currentTCommand);
+
+                        continue;
+                    }
+
                     CommandPosition normalizedPreviousDiff = (previousTCommand.EndValue - previousTCommand.StartValue) / previousTCommand.Duration;
                     CommandPosition normalizedCurrentDiff = (currentTCommand.EndValue - currentTCommand.StartValue) / currentTCommand.Duration;
 
@@ -416,9 +424,17 @@ namespace StorybrewCommon.Storyboarding
                 T previousTCommand = newTCommands[newTCommands.Count - 1];
                 T currentTCommand = tCommands[i];
                 if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
-                                                              && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
-                                                              && previousTCommand.EndValue == currentTCommand.StartValue)
+                    && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
+                    && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
+                    if (currentTCommand.Duration == 0)
+                    {
+                        if (currentTCommand.EndValue != currentTCommand.StartValue)
+                            newTCommands.Add(currentTCommand);
+
+                        continue;
+                    }
+
                     CommandScale normalizedPreviousDiff = (previousTCommand.EndValue - previousTCommand.StartValue) / previousTCommand.Duration;
                     CommandScale normalizedCurrentDiff = (currentTCommand.EndValue - currentTCommand.StartValue) / currentTCommand.Duration;
 
@@ -460,6 +476,14 @@ namespace StorybrewCommon.Storyboarding
                     && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
                     && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
+                    if (currentTCommand.Duration == 0)
+                    {
+                        if (currentTCommand.EndValue != currentTCommand.StartValue)
+                            newTCommands.Add(currentTCommand);
+
+                        continue;
+                    }
+
                     double normalizedPreviousDiff = (previousTCommand.EndValue - previousTCommand.StartValue) / previousTCommand.Duration;
                     double normalizedCurrentDiff = (currentTCommand.EndValue - currentTCommand.StartValue) / currentTCommand.Duration;
 
