@@ -526,13 +526,17 @@ namespace StorybrewCommon.Storyboarding
             var optimizedVectorScaleCommands = OptimizedScaleCommands<VScaleCommand>();
             var optimizedFadeCommands = OptimizedCommands<FadeCommand>();
             var optimizedRotateCommands = OptimizedCommands<RotateCommand>();
+            var optimizedMoveXCommands = OptimizedCommands<MoveXCommand>();
+            var optimizedMoveYCommands = OptimizedCommands<MoveYCommand>();
 
-            commands.RemoveAll(command => command is MoveCommand or ScaleCommand or VScaleCommand or FadeCommand or RotateCommand);
+            commands.RemoveAll(command => command is MoveCommand or ScaleCommand or VScaleCommand or FadeCommand or RotateCommand or MoveXCommand or MoveYCommand);
             commands.AddRange(optimizedMoveCommands);
             commands.AddRange(optimizedScaleCommands);
             commands.AddRange(optimizedVectorScaleCommands);
             commands.AddRange(optimizedFadeCommands);
             commands.AddRange(optimizedRotateCommands);
+            commands.AddRange(optimizedMoveXCommands);
+            commands.AddRange(optimizedMoveYCommands);
         }
 
         public override void WriteOsb(TextWriter writer, ExportSettings exportSettings, OsbLayer layer, StoryboardTransform transform)
