@@ -464,7 +464,7 @@ namespace StorybrewCommon.Storyboarding
         private IEnumerable<T> OptimizedCommands<T>() where T : Command<CommandDecimal>
         {
             // TODO: need to rethink and comment most of this; culling commands isn't trivial and needs to be commented with assumptions and stuff
-            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
+            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ToArray();
             if (tCommands.Length == 0) return Array.Empty<T>();
 
             List<T> newTCommands = [tCommands[0]];
@@ -473,10 +473,24 @@ namespace StorybrewCommon.Storyboarding
             {
                 T previousTCommand = newTCommands[newTCommands.Count - 1];
                 T currentTCommand = tCommands[i];
-                if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
+                // if the previous command has 0 duration and is at the starttime of the previous command, it basically does nothing
+                // so just replace it with the current command
+                if (previousTCommand.Duration == 0 && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime)
+                {
+                    newTCommands[newTCommands.Count - 1] = currentTCommand;
+                }
+                else if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
                     && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
                     && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
+                    // not sure about this one, but should be safe
+                    // basically, if the previous command has no duration, we can't merge anyway, so just add the current command
+                    if (previousTCommand.Duration == 0)
+                    {
+                        newTCommands.Add(currentTCommand);
+                        continue;
+                    }
+
                     if (currentTCommand.Duration == 0)
                     {
                         if (currentTCommand.EndValue != currentTCommand.StartValue)
