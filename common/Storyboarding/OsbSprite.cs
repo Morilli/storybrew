@@ -463,6 +463,7 @@ namespace StorybrewCommon.Storyboarding
 
         private IEnumerable<T> OptimizedCommands<T>() where T : Command<CommandDecimal>
         {
+            // TODO: need to rethink and comment most of this; culling commands isn't trivial and needs to be commented with assumptions and stuff
             T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
             if (tCommands.Length == 0) return Array.Empty<T>();
 
@@ -497,18 +498,20 @@ namespace StorybrewCommon.Storyboarding
                         newTCommands.Add(currentTCommand);
                     }
                 }
-                else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
-                {
-                    newTCommands[newTCommands.Count - 1] = currentTCommand;
-                }
+                // else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
+                // {
+                    // newTCommands[newTCommands.Count - 1] = currentTCommand;
+                // }
                 else
                 {
                     newTCommands.Add(currentTCommand);
                 }
             }
 
+            // if the last command is a "default" command, aka has no duration and doesn't change the object's state, it can be removed
+            // TODO: below is not exactly correct
             T lastComand = newTCommands[newTCommands.Count - 1];
-            if (lastComand.StartValue == lastComand.EndValue)
+            if (lastComand.StartValue == lastComand.EndValue && (int)lastComand.StartTime == (int)lastComand.EndTime)
             {
                 if (lastComand is FadeCommand fade && fade.StartValue == 1
                     || lastComand is RotateCommand rotate && rotate.StartValue == 0
