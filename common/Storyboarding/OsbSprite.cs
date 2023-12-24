@@ -365,7 +365,8 @@ namespace StorybrewCommon.Storyboarding
 
         private IEnumerable<T> OptimizedPositionCommands<T>() where T : Command<CommandPosition>
         {
-            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
+            // TODO: need to rethink and comment most of this; culling commands isn't trivial and needs to be commented with assumptions and stuff
+            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ToArray();
             if (tCommands.Length == 0) return Array.Empty<T>();
 
             List<T> newTCommands = [tCommands[0]];
@@ -374,10 +375,24 @@ namespace StorybrewCommon.Storyboarding
             {
                 T previousTCommand = newTCommands[newTCommands.Count - 1];
                 T currentTCommand = tCommands[i];
-                if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
+                // if the previous command has 0 duration and is at the starttime of the current command, it basically does nothing
+                // so just replace it with the current command
+                if (previousTCommand.Duration == 0 && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime)
+                {
+                    newTCommands[newTCommands.Count - 1] = currentTCommand;
+                }
+                else if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
                     && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
                     && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
+                    // not sure about this one, but should be safe
+                    // basically, if the previous command has no duration, we can't merge anyway, so just add the current command
+                    if (previousTCommand.Duration == 0)
+                    {
+                        newTCommands.Add(currentTCommand);
+                        continue;
+                    }
+
                     if (currentTCommand.Duration == 0)
                     {
                         if (currentTCommand.EndValue != currentTCommand.StartValue)
@@ -399,10 +414,6 @@ namespace StorybrewCommon.Storyboarding
                         newTCommands.Add(currentTCommand);
                     }
                 }
-                else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
-                {
-                    newTCommands[newTCommands.Count - 1] = currentTCommand;
-                }
                 else
                 {
                     newTCommands.Add(currentTCommand);
@@ -414,7 +425,8 @@ namespace StorybrewCommon.Storyboarding
 
         private IEnumerable<T> OptimizedScaleCommands<T>() where T : Command<CommandScale>
         {
-            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ToArray();
+            // TODO: need to rethink and comment most of this; culling commands isn't trivial and needs to be commented with assumptions and stuff
+            T[] tCommands = commands.OfType<T>().OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ToArray();
             if (tCommands.Length == 0) return Array.Empty<T>();
 
             List<T> newTCommands = [tCommands[0]];
@@ -423,10 +435,24 @@ namespace StorybrewCommon.Storyboarding
             {
                 T previousTCommand = newTCommands[newTCommands.Count - 1];
                 T currentTCommand = tCommands[i];
-                if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
+                // if the previous command has 0 duration and is at the starttime of the current command, it basically does nothing
+                // so just replace it with the current command
+                if (previousTCommand.Duration == 0 && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime)
+                {
+                    newTCommands[newTCommands.Count - 1] = currentTCommand;
+                }
+                else if (previousTCommand.Easing == OsbEasing.None && currentTCommand.Easing == OsbEasing.None
                     && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime
                     && previousTCommand.EndValue == currentTCommand.StartValue)
                 {
+                    // not sure about this one, but should be safe
+                    // basically, if the previous command has no duration, we can't merge anyway, so just add the current command
+                    if (previousTCommand.Duration == 0)
+                    {
+                        newTCommands.Add(currentTCommand);
+                        continue;
+                    }
+
                     if (currentTCommand.Duration == 0)
                     {
                         if (currentTCommand.EndValue != currentTCommand.StartValue)
@@ -447,10 +473,6 @@ namespace StorybrewCommon.Storyboarding
                     {
                         newTCommands.Add(currentTCommand);
                     }
-                }
-                else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
-                {
-                    newTCommands[newTCommands.Count - 1] = currentTCommand;
                 }
                 else
                 {
@@ -473,7 +495,7 @@ namespace StorybrewCommon.Storyboarding
             {
                 T previousTCommand = newTCommands[newTCommands.Count - 1];
                 T currentTCommand = tCommands[i];
-                // if the previous command has 0 duration and is at the starttime of the previous command, it basically does nothing
+                // if the previous command has 0 duration and is at the starttime of the current command, it basically does nothing
                 // so just replace it with the current command
                 if (previousTCommand.Duration == 0 && (int)previousTCommand.EndTime == (int)currentTCommand.StartTime)
                 {
@@ -512,10 +534,6 @@ namespace StorybrewCommon.Storyboarding
                         newTCommands.Add(currentTCommand);
                     }
                 }
-                // else if (previousTCommand.StartValue == previousTCommand.EndValue && previousTCommand.EndValue == currentTCommand.StartValue)
-                // {
-                    // newTCommands[newTCommands.Count - 1] = currentTCommand;
-                // }
                 else
                 {
                     newTCommands.Add(currentTCommand);
@@ -524,14 +542,14 @@ namespace StorybrewCommon.Storyboarding
 
             // if the last command is a "default" command, aka has no duration and doesn't change the object's state, it can be removed
             // TODO: below is not exactly correct
-            T lastComand = newTCommands[newTCommands.Count - 1];
-            if (lastComand.StartValue == lastComand.EndValue && (int)lastComand.StartTime == (int)lastComand.EndTime)
-            {
-                if (lastComand is FadeCommand fade && fade.StartValue == 1
-                    || lastComand is RotateCommand rotate && rotate.StartValue == 0
-                    || lastComand is ScaleCommand scale && scale.StartValue == 1)
-                    newTCommands.RemoveAt(newTCommands.Count - 1);
-            }
+            // T lastComand = newTCommands[newTCommands.Count - 1];
+            // if (lastComand.StartValue == lastComand.EndValue && (int)lastComand.StartTime == (int)lastComand.EndTime)
+            // {
+            //     if (lastComand is FadeCommand fade && fade.StartValue == 1
+            //         || lastComand is RotateCommand rotate && rotate.StartValue == 0
+            //         || lastComand is ScaleCommand scale && scale.StartValue == 1)
+            //         newTCommands.RemoveAt(newTCommands.Count - 1);
+            // }
 
             return newTCommands;
         }
